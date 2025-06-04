@@ -1,0 +1,935 @@
+<!DOCTYPE html>
+<html dir="rtl" lang="ar">
+<head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>نظام توزيع الأفراد على المجموعات</title>
+<link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet"/>
+<script src="https://cdn.sheetjs.com/xlsx-0.19.3/package/dist/xlsx.full.min.js"></script>
+<style>
+@font-face {
+    font-family: 'HelveticaNeueLTArabic-Roman';
+    src: url('HelveticaNeueLTArabic-Roman.ttf') format('truetype');
+}
+body, h1, h2, h3, h4, h5, h6, div, span, p, button {
+    font-family: 'HelveticaNeueLTArabic-Roman', sans-serif;
+}
+
+body {
+    font-family: 'Arial', sans-serif;
+    margin: 0;
+    padding: 0;
+    background-color: #f5f5f5;
+    overflow-x: hidden;
+}
+
+.container {
+    display: flex;
+    flex-direction: column;
+    height: 100vh;
+    width: 100vw;
+    position: relative;
+}
+
+.control-area {
+    padding: 15px;
+    background-color: #F69C7A;
+    color: white;
+    text-align: center;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    gap: 10px;
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.2);
+    position: sticky;
+    top: 0;
+    z-index: 1010;
+    flex-wrap: wrap;
+}
+
+.btn {
+    padding: 10px 15px;
+    font-size: 14px;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+    background-color: #934798;
+    color: white;
+    transition: all 0.3s;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.btn:hover {
+    background-color: #2980b9;
+    transform: translateY(-2px);
+}
+
+.btn:active {
+    transform: translateY(0);
+}
+
+.counter {
+    font-size: 16px;
+    background-color: #934798;
+    padding: 8px 12px;
+    border-radius: 20px;
+}
+
+.name-card-area {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    z-index: 100;
+    width: 300px;
+    height: 220px;
+}
+
+.name-card {
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(135deg, #ffffff, #f1f1f1);
+    border-radius: 40px;
+    box-shadow: 0 10px 20px rgba(0, 0, 0, 0.2);
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    position: absolute;
+    top: 0;
+    left: 0;
+    overflow: hidden;
+    transform-origin: center;
+}
+
+.name-card::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 5px;
+    background: linear-gradient(90deg, #3498db, #2ecc71);
+}
+
+.name-card .name {
+    font-size: 32px;
+    font-weight: bold;
+    margin-bottom: 10px;
+    color: #F69C7A;
+}
+
+.name-card .gender-icon {
+    font-size: 50px;
+}
+
+.side-panel {
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+    padding: 20px;
+    width: 25%;
+    overflow-y: auto;
+}
+
+.left-panel {
+    position: fixed;
+    left: 0;
+    bottom: 0;
+}
+
+.right-panel {
+    position: fixed;
+    right: 0;
+    bottom: 0;
+}
+
+.gate {
+    background-color: white;
+    border-radius: 30px;
+    padding: 15px;
+    box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+    transition: all 0.3s;
+}
+
+.gate:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 8px 20px rgba(0, 0, 0, 0.15);
+}
+
+.gate h3 {
+    margin-top: 0;
+    margin-bottom: 15px;
+    color: #2c3e50;
+    text-align: center;
+    padding-bottom: 5px;
+    border-bottom: 2px solid #eee;
+}
+
+.slots {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 10px;
+}
+
+.slot {
+    background-color: #3498db;
+    border-radius: 20px;
+    padding: 10px;
+    min-height: 80px;
+    border: 2px dashed #ddd;
+    transition: all 0.3s;
+}
+
+.slot:hover {
+    border-color: #3498db;
+    background-color: #F69C7A;
+}
+
+.group-name {
+    display: block;
+    font-size: 15px;
+    color: #7f8c8d;
+    margin-bottom: 2px;
+    text-align: center;
+    font-weight: bold;
+}
+
+.names-list {
+    font-size: 14px;
+    color: #34495e;
+    max-height: 100px;
+    overflow-y: auto;
+}
+
+.names-list div {
+    padding: 3px 0;
+    border-bottom: 1px solid #eee;
+    transition: background-color 0.5s ease;
+}
+.names-list div:last-child {
+    border-bottom: none;
+}
+
+.hidden {
+    display: none !important;
+}
+
+.final-distribution {
+    padding: 20px;
+    background-color: white;
+    border-radius: 10px;
+    box-shadow: 0 0 20px rgba(0, 0, 0, 0.2);
+    max-width: 90%;
+    margin: 20px auto;
+    direction: rtl;
+}
+
+.final-distribution h2 {
+    text-align: center;
+    color: #2c3e50;
+    margin-bottom: 30px;
+}
+
+.distribution-table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-bottom: 20px;
+}
+
+.distribution-table th, .distribution-table td {
+    padding: 12px;
+    text-align: center;
+    border: 1px solid #ddd;
+}
+
+.distribution-table th {
+    background-color: #247EB1;
+    color: white;
+}
+
+.distribution-table tr:nth-child(even) {
+    background-color: #f2f2f2; /* Fallback, will be overridden */
+}
+
+.export-buttons {
+    display: flex;
+    justify-content: center;
+    gap: 15px;
+    margin-top: 20px;
+}
+
+.print-btn, .excel-btn, .back-btn {
+    background-color: #934798;
+}
+.print-btn:hover, .excel-btn:hover, .back-btn:hover {
+    background-color: #e58a68;
+}
+
+.male-card { border-left: 5px solid #3498db; }
+.female-card { border-left: 5px solid #e84393; }
+.male-slot { background-color: #e3f2fd; }
+.female-slot { background-color: #fce4ec; }
+
+@keyframes gateHighlight {
+    0% { box-shadow: 0 0 0 0 rgba(46, 204, 113, 0.7), 0 5px 15px rgba(0,0,0,0.1); }
+    50% { box-shadow: 0 0 15px 10px rgba(46, 204, 113, 0.3), 0 8px 20px rgba(0,0,0,0.15); }
+    100% { box-shadow: 0 0 0 0 rgba(46, 204, 113, 0), 0 5px 15px rgba(0,0,0,0.1); }
+}
+.gate-highlight { animation: gateHighlight 1s; }
+
+@media (max-width: 1200px) { .side-panel { width: 30%; } }
+@media (max-width: 992px) {
+    .side-panel { width: 35%; }
+    .name-card-area { width: 220px; height: 160px; }
+    .name-card .name { font-size: 28px; }
+    .name-card .gender-icon { font-size: 40px; }
+}
+@media (max-width: 768px) {
+    .container { flex-direction: column; height: auto; }
+    .control-area { gap: 5px; }
+    .btn { padding: 8px 10px; font-size: 12px; gap: 5px; }
+    .counter { font-size: 14px; padding: 6px 10px; }
+    .side-panel { position: static; width: 100%; flex-direction: row; flex-wrap: wrap; justify-content: space-around; padding: 10px; top: auto; }
+    .left-panel, .right-panel { position: static; width: 100%; bottom: auto; }
+    .gate { width: 48%; margin-bottom: 15px; }
+    .name-card-area { position: sticky; top: 100px; left: 50%; transform: translateX(-50%); margin: 20px auto; z-index: 100; width: 180px; height: 130px; }
+    .name-card .name { font-size: 24px; }
+    .name-card .gender-icon { font-size: 30px; }
+}
+@media (max-width: 576px) {
+    .gate { width: 95%; }
+    .control-area { flex-direction: column; gap: 10px; padding-bottom: 10px; }
+    .name-card-area { top: 220px; width: 160px; height: 110px; }
+    .name-card .name { font-size: 20px; }
+    .name-card .gender-icon { font-size: 28px; }
+    .speed-control { flex-direction: column; font-size: 12px; }
+    .speed-control input { width: 120px;}
+}
+
+.gate-icon { width: 160px; height: 160px; margin: 0 auto 10px; background-size: contain; background-repeat: no-repeat; background-position: center; transition: all 0.3s; }
+.gate:hover .gate-icon { transform: scale(1.1); }
+#gate-r1 .gate-icon { background-image: url('falcon.jpg'); }
+#gate-l1 .gate-icon { background-image: url('falcon.jpg'); }
+#gate-r2 .gate-icon { background-image: url('oryx.jpg'); }
+#gate-l2 .gate-icon { background-image: url('oryx.jpg'); }
+#gate-r3 .gate-icon { background-image: url('horse.jpg'); }
+#gate-l3 .gate-icon { background-image: url('horse.jpg'); }
+#gate-r4 .gate-icon { background-image: url('whale.jpg'); }
+#gate-l4 .gate-icon { background-image: url('whale.jpg'); }
+
+@keyframes cardEnter {
+    0% { transform: scale(0.3) rotate(-90deg); opacity: 0; }
+    60% { transform: scale(1.3) rotate(10deg); opacity: 1; }
+    80% { transform: scale(0.85) rotate(-5deg); }
+    100% { transform: scale(1) rotate(0deg); opacity: 1; }
+}
+.name-card-enter { animation: cardEnter 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards; }
+@keyframes popIn {
+  0% { transform: scale(0.5); opacity: 0; }
+  50% { transform: scale(1.1); opacity: 1; }
+  100% { transform: scale(1); opacity: 1; }
+}
+.name-card-animate { animation: popIn 0.6s ease-out; }
+
+#gate-r1, #gate-l1 { background-color: #F8CD71; }
+#gate-r2, #gate-l2 { background-color: #86CDBB; }
+#gate-r3, #gate-l3 { background-color: #E5554D; }
+#gate-r4, #gate-l4 { background-color: #247EB1; }
+
+.names-list div.new-name-added { animation: newNameEnter 0.6s ease-out; background-color: #cceeff; border-radius: 4px; padding: 4px 6px !important; }
+@keyframes newNameEnter {
+    0% { opacity: 0; transform: translateY(15px) scale(0.9); }
+    70% { opacity: 1; transform: translateY(-2px) scale(1.02); }
+    100% { opacity: 1; transform: translateY(0) scale(1); }
+}
+.vortex-effect { position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); width: 400px; height: 400px; border: 10px dashed #E5554D; border-top-color: transparent; border-bottom-color: transparent; border-radius: 50%; animation: spin 0.8s linear infinite; z-index: -1; opacity: 0; transition: opacity 0.5s ease-out; }
+.vortex-effect:not(.hidden) { opacity: 0.7; }
+@keyframes spin {
+    0% { transform: translate(-50%, -50%) rotate(0deg); }
+    100% { transform: translate(-50%, -50%) rotate(360deg); }
+}
+</style>
+</head>
+<body>
+<div style="text-align:center;padding:5px 0;background:#1a1a2e;color:white;font-size:24px;font-weight:bold;font-family:'Tajawal',sans-serif;" id="appHeader">
+    <img src="KAFU.png" style="height:300px;margin-left:15px;vertical-align:middle;"/>
+</div>
+
+<div class="container" id="mainContainer">
+    <div class="control-area" id="controlArea">
+        <button class="btn" id="startBtn"><i class="fas fa-play"></i> ابدأ التوزيع</button>
+        <button class="btn hidden" id="pauseBtn"><i class="fas fa-pause"></i> إيقاف مؤقت</button>
+        <button class="btn" id="resetBtn"><i class="fas fa-redo"></i> إعادة تعيين</button>
+        <button class="btn hidden" id="viewFinalDistributionBtn"><i class="fas fa-table"></i> عرض التوزيع النهائي</button>
+        <div class="counter">
+            <span id="remainingCount">0</span> / <span id="totalCount">0</span>
+        </div>
+        <div class="speed-control">
+            <label for="speedSlider">سرعة التوزيع:</label>
+            <input id="speedSlider" max="3000" min="500" step="100" type="range" value="1500"/>
+            <span id="speedValue">1.5 ثانية</span>
+        </div>
+    </div>
+
+    <div class="name-card-area" id="nameCardArea">
+        <div class="vortex-effect hidden" id="vortexEffect"></div>
+        <div class="name-card hidden" id="nameCard">
+            <div class="name"></div>
+            <div class="gender-icon"></div>
+        </div>
+    </div>
+
+    <div class="left-panel side-panel">
+        <div class="gate" id="gate-l1">
+            <h3>الوعي الذاتي - معسكر التميز</h3>
+            <div class="slots">
+                <div class="slot" data-group="مجموعة الذكور 5" id="gate-l1-slot1"><span class="group-name"></span><div class="names-list"></div></div>
+                <div class="slot" data-group="مجموعة الذكور 6" id="gate-l1-slot2"><span class="group-name"></span><div class="names-list"></div></div>
+                <div class="slot" data-group="مجموعة الذكور 7" id="gate-l1-slot3"><span class="group-name"></span><div class="names-list"></div></div>
+                <div class="slot" data-group="مجموعة الذكور 8" id="gate-l1-slot4"><span class="group-name"></span><div class="names-list"></div></div>
+            </div>
+        </div>
+        <div class="gate" id="gate-l2">
+            <h3>التعاون - معسكر التميز</h3>
+            <div class="slots">
+                <div class="slot" data-group="مجموعة الإناث 5" id="gate-l2-slot1"><span class="group-name"></span><div class="names-list"></div></div>
+                <div class="slot" data-group="مجموعة الإناث 6" id="gate-l2-slot2"><span class="group-name"></span><div class="names-list"></div></div>
+                <div class="slot" data-group="مجموعة الإناث 7" id="gate-l2-slot3"><span class="group-name"></span><div class="names-list"></div></div>
+                <div class="slot" data-group="مجموعة الإناث 8" id="gate-l2-slot4"><span class="group-name"></span><div class="names-list"></div></div>
+            </div>
+        </div>
+        <div class="gate" id="gate-l3">
+            <h3>الشجاعة - معسكر التميز</h3>
+            <div class="slots">
+                <div class="slot" data-group="مجموعة الإناث 13" id="gate-l3-slot1"><span class="group-name"></span><div class="names-list"></div></div>
+                <div class="slot" data-group="مجموعة الإناث 14" id="gate-l3-slot2"><span class="group-name"></span><div class="names-list"></div></div>
+                <div class="slot" data-group="مجموعة الإناث 15" id="gate-l3-slot3"><span class="group-name"></span><div class="names-list"></div></div>
+                <div class="slot" data-group="مجموعة الإناث 16" id="gate-l3-slot4"><span class="group-name"></span><div class="names-list"></div></div>
+            </div>
+        </div>
+        <div class="gate" id="gate-l4">
+            <h3>الالتزام - معسكر التميز</h3>
+            <div class="slots">
+                <div class="slot" data-group="مجموعة الإناث 21" id="gate-l4-slot1"><span class="group-name"></span><div class="names-list"></div></div>
+                <div class="slot" data-group="مجموعة الإناث 22" id="gate-l4-slot2"><span class="group-name"></span><div class="names-list"></div></div>
+                <div class="slot" data-group="مجموعة الإناث 23" id="gate-l4-slot3"><span class="group-name"></span><div class="names-list"></div></div>
+                <div class="slot" data-group="مجموعة الإناث 24" id="gate-l4-slot4"><span class="group-name"></span><div class="names-list"></div></div>
+            </div>
+        </div>
+    </div>
+
+    <div class="right-panel side-panel">
+        <div class="gate" id="gate-r1">
+            <h3>الوعي الذاتي - معسكر الابداع</h3>
+            <div class="slots">
+                <div class="slot" data-group="مجموعة الذكور 1" id="gate-r1-slot1"><span class="group-name"></span><div class="names-list"></div></div>
+                <div class="slot" data-group="مجموعة الذكور 2" id="gate-r1-slot2"><span class="group-name"></span><div class="names-list"></div></div>
+                <div class="slot" data-group="مجموعة الذكور 3" id="gate-r1-slot3"><span class="group-name"></span><div class="names-list"></div></div>
+                <div class="slot" data-group="مجموعة الذكور 4" id="gate-r1-slot4"><span class="group-name"></span><div class="names-list"></div></div>
+            </div>
+        </div>
+        <div class="gate" id="gate-r2">
+            <h3>التعاون - معسكر الابداع</h3>
+            <div class="slots">
+                <div class="slot" data-group="مجموعة الإناث 1" id="gate-r2-slot1"><span class="group-name"></span><div class="names-list"></div></div>
+                <div class="slot" data-group="مجموعة الإناث 2" id="gate-r2-slot2"><span class="group-name"></span><div class="names-list"></div></div>
+                <div class="slot" data-group="مجموعة الإناث 3" id="gate-r2-slot3"><span class="group-name"></span><div class="names-list"></div></div>
+                <div class="slot" data-group="مجموعة الإناث 4" id="gate-r2-slot4"><span class="group-name"></span><div class="names-list"></div></div>
+            </div>
+        </div>
+        <div class="gate" id="gate-r3">
+            <h3>الشجاعة - معسكر الابداع</h3>
+            <div class="slots">
+                <div class="slot" data-group="مجموعة الإناث 9" id="gate-r3-slot1"><span class="group-name"></span><div class="names-list"></div></div>
+                <div class="slot" data-group="مجموعة الإناث 10" id="gate-r3-slot2"><span class="group-name"></span><div class="names-list"></div></div>
+                <div class="slot" data-group="مجموعة الإناث 11" id="gate-r3-slot3"><span class="group-name"></span><div class="names-list"></div></div>
+                <div class="slot" data-group="مجموعة الإناث 12" id="gate-r3-slot4"><span class="group-name"></span><div class="names-list"></div></div>
+            </div>
+        </div>
+        <div class="gate" id="gate-r4">
+            <h3>الالتزام - معسكر الابداع</h3>
+            <div class="slots">
+                <div class="slot" data-group="مجموعة الإناث 17" id="gate-r4-slot1"><span class="group-name"></span><div class="names-list"></div></div>
+                <div class="slot" data-group="مجموعة الإناث 18" id="gate-r4-slot2"><span class="group-name"></span><div class="names-list"></div></div>
+                <div class="slot" data-group="مجموعة الإناث 19" id="gate-r4-slot3"><span class="group-name"></span><div class="names-list"></div></div>
+                <div class="slot" data-group="مجموعة الإناث 20" id="gate-r4-slot4"><span class="group-name"></span><div class="names-list"></div></div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="final-distribution hidden" id="finalDistribution">
+    <h2>التوزيع النهائي للمنتسبين</h2>
+    <div id="distributionTableContainer"></div>
+    <div class="export-buttons">
+        <button class="btn excel-btn" id="exportExcelBtn"><i class="fas fa-file-excel"></i> تصدير لملف Excel</button>
+        <button class="btn print-btn" id="printBtn"><i class="fas fa-print"></i> طباعة التقرير</button>
+        <button class="btn back-btn" id="backToMainBtn"><i class="fas fa-arrow-left"></i> العودة للصفحة الرئيسية</button>
+    </div>
+</div>
+
+<script>
+const peopleData = [
+    // ... (Your existing peopleData array - keep it as is) ...
+        { name: "عبد العزيز المجاهد", gender: "male", assignedMainGateId: "gate-r1", assignedSlotInMainGate: 1, finalGroupName: "مجموعة الذكور 1" },
+        { name: "حذيفه فاضل", gender: "male", assignedMainGateId: "gate-r1", assignedSlotInMainGate: 1, finalGroupName: "مجموعة الذكور 1" },
+        { name: "محمود الفرماوي", gender: "male", assignedMainGateId: "gate-r1", assignedSlotInMainGate: 1, finalGroupName: "مجموعة الذكور 1" },
+        { name: "نور الاسلام طالبي", gender: "male", assignedMainGateId: "gate-r1", assignedSlotInMainGate: 1, finalGroupName: "مجموعة الذكور 1" },
+        { name: "عبدالله شرف الدين", gender: "male", assignedMainGateId: "gate-r1", assignedSlotInMainGate: 2, finalGroupName: "مجموعة الذكور 2" },
+        { name: "عبدالجبار الصالح", gender: "male", assignedMainGateId: "gate-r1", assignedSlotInMainGate: 2, finalGroupName: "مجموعة الذكور 2" },
+        { name: "أحمد معوض", gender: "male", assignedMainGateId: "gate-r1", assignedSlotInMainGate: 2, finalGroupName: "مجموعة الذكور 2" },
+        { name: "محمد الفرج", gender: "male", assignedMainGateId: "gate-r1", assignedSlotInMainGate: 2, finalGroupName: "مجموعة الذكور 2" },
+        { name: "محمد كدخدائي", gender: "male", assignedMainGateId: "gate-r1", assignedSlotInMainGate: 2, finalGroupName: "مجموعة الذكور 2" },
+    { name: "أنس العبدالرحمن", gender: "male", assignedMainGateId: "gate-r1", assignedSlotInMainGate: 3, finalGroupName: "مجموعة الذكور 3" },
+    { name: "أواب إبراهيم", gender: "male", assignedMainGateId: "gate-r1", assignedSlotInMainGate: 3, finalGroupName: "مجموعة الذكور 3" },
+    { name: "محمد أيهم حريتاني", gender: "male", assignedMainGateId: "gate-r1", assignedSlotInMainGate: 3, finalGroupName: "مجموعة الذكور 3" },
+    { name: "محمد الشيخ", gender: "male", assignedMainGateId: "gate-r1", assignedSlotInMainGate: 3, finalGroupName: "مجموعة الذكور 3" },
+    { name: "قيس الجمل", gender: "male", assignedMainGateId: "gate-r1", assignedSlotInMainGate: 3, finalGroupName: "مجموعة الذكور 3" },
+    { name: "عبدالعظيم عبدالمالك", gender: "male", assignedMainGateId: "gate-r1", assignedSlotInMainGate: 4, finalGroupName: "مجموعة الذكور 4" },
+    { name: "ماجد القيسي", gender: "male", assignedMainGateId: "gate-r1", assignedSlotInMainGate: 4, finalGroupName: "مجموعة الذكور 4" },
+    { name: "وسيم الدم", gender: "male", assignedMainGateId: "gate-r1", assignedSlotInMainGate: 4, finalGroupName: "مجموعة الذكور 4" },
+    { name: "يوسف علي", gender: "male", assignedMainGateId: "gate-r1", assignedSlotInMainGate: 4, finalGroupName: "مجموعة الذكور 4" },
+    { name: "عبد الرحمن سلامة", gender: "male", assignedMainGateId: "gate-l1", assignedSlotInMainGate: 1, finalGroupName: "مجموعة الذكور 5" },
+    { name: "أحمد مصلح", gender: "male", assignedMainGateId: "gate-l1", assignedSlotInMainGate: 1, finalGroupName: "مجموعة الذكور 5" },
+    { name: "أيمن ابراهيم", gender: "male", assignedMainGateId: "gate-l1", assignedSlotInMainGate: 1, finalGroupName: "مجموعة الذكور 5" },
+    { name: "حموده ابو عنزه", gender: "male", assignedMainGateId: "gate-l1", assignedSlotInMainGate: 1, finalGroupName: "مجموعة الذكور 5" },
+    { name: "يحيى السعيدي", gender: "male", assignedMainGateId: "gate-l1", assignedSlotInMainGate: 1, finalGroupName: "مجموعة الذكور 5" },
+    { name: "عبدالرحمن ابو جلبان", gender: "male", assignedMainGateId: "gate-l1", assignedSlotInMainGate: 2, finalGroupName: "مجموعة الذكور 6" },
+    { name: "عبدالرحمن إسماعيل", gender: "male", assignedMainGateId: "gate-l1", assignedSlotInMainGate: 2, finalGroupName: "مجموعة الذكور 6" },
+    { name: "محمد ضاهر", gender: "male", assignedMainGateId: "gate-l1", assignedSlotInMainGate: 2, finalGroupName: "مجموعة الذكور 6" },
+    { name: "عمر حيدر", gender: "male", assignedMainGateId: "gate-l1", assignedSlotInMainGate: 2, finalGroupName: "مجموعة الذكور 6" },
+    { name: "فيصل مجذوب", gender: "male", assignedMainGateId: "gate-l1", assignedSlotInMainGate: 3, finalGroupName: "مجموعة الذكور 7" },
+    { name: "محمود عبد الرازق", gender: "male", assignedMainGateId: "gate-l1", assignedSlotInMainGate: 3, finalGroupName: "مجموعة الذكور 7" },
+    { name: "صهيب الأغبري", gender: "male", assignedMainGateId: "gate-l1", assignedSlotInMainGate: 3, finalGroupName: "مجموعة الذكور 7" },
+    { name: "طلحة محمد", gender: "male", assignedMainGateId: "gate-l1", assignedSlotInMainGate: 3, finalGroupName: "مجموعة الذكور 7" },
+    { name: "حمزه ابو ارشيد", gender: "male", assignedMainGateId: "gate-l1", assignedSlotInMainGate: 4, finalGroupName: "مجموعة الذكور 8" },
+    { name: "جميل المخلف", gender: "male", assignedMainGateId: "gate-l1", assignedSlotInMainGate: 4, finalGroupName: "مجموعة الذكور 8" },
+    { name: "محمد محمد", gender: "male", assignedMainGateId: "gate-l1", assignedSlotInMainGate: 4, finalGroupName: "مجموعة الذكور 8" },
+    { name: "محمد ابراهيم الياس", gender: "male", assignedMainGateId: "gate-l1", assignedSlotInMainGate: 4, finalGroupName: "مجموعة الذكور 8" },
+    { name: "ذكريات الشلول", gender: "female", assignedMainGateId: "gate-r2", assignedSlotInMainGate: 1, finalGroupName: "مجموعة الإناث 1" },
+    { name: "نور القدور", gender: "female", assignedMainGateId: "gate-r2", assignedSlotInMainGate: 1, finalGroupName: "مجموعة الإناث 1" },
+    { name: "لميس تميمي", gender: "female", assignedMainGateId: "gate-r2", assignedSlotInMainGate: 1, finalGroupName: "مجموعة الإناث 1" },
+    { name: "مها الربعان", gender: "female", assignedMainGateId: "gate-r2", assignedSlotInMainGate: 1, finalGroupName: "مجموعة الإناث 1" },
+    { name: "سلام عبد الجواد", gender: "female", assignedMainGateId: "gate-r2", assignedSlotInMainGate: 2, finalGroupName: "مجموعة الإناث 2" },
+    { name: "عبير محي الدين", gender: "female", assignedMainGateId: "gate-r2", assignedSlotInMainGate: 2, finalGroupName: "مجموعة الإناث 2" },
+    { name: "الاء بني بكر", gender: "female", assignedMainGateId: "gate-r2", assignedSlotInMainGate: 2, finalGroupName: "مجموعة الإناث 2" },
+    { name: "اسماء عساف", gender: "female", assignedMainGateId: "gate-r2", assignedSlotInMainGate: 2, finalGroupName: "مجموعة الإناث 2" },
+    { name: "دلال الطيري", gender: "female", assignedMainGateId: "gate-r2", assignedSlotInMainGate: 3, finalGroupName: "مجموعة الإناث 3" },
+    { name: "دعاء يوسف", gender: "female", assignedMainGateId: "gate-r2", assignedSlotInMainGate: 3, finalGroupName: "مجموعة الإناث 3" },
+    { name: "دعاء الحديد", gender: "female", assignedMainGateId: "gate-r2", assignedSlotInMainGate: 3, finalGroupName: "مجموعة الإناث 3" },
+    { name: "الشيماء ضبيع", gender: "female", assignedMainGateId: "gate-r2", assignedSlotInMainGate: 3, finalGroupName: "مجموعة الإناث 3" },
+    { name: "إسراء الشنيطي", gender: "female", assignedMainGateId: "gate-r2", assignedSlotInMainGate: 4, finalGroupName: "مجموعة الإناث 4" },
+    { name: "فاطمة الزهراء محمد ", gender: "female", assignedMainGateId: "gate-r2", assignedSlotInMainGate: 4, finalGroupName: "مجموعة الإناث 4" },
+    { name: "حبيبه رفاعي", gender: "female", assignedMainGateId: "gate-r2", assignedSlotInMainGate: 4, finalGroupName: "مجموعة الإناث 4" },
+    { name: "هيفاء عودة الله", gender: "female", assignedMainGateId: "gate-r2", assignedSlotInMainGate: 4, finalGroupName: "مجموعة الإناث 4" },
+    { name: "مي جابر", gender: "female", assignedMainGateId: "gate-l2", assignedSlotInMainGate: 1, finalGroupName: "مجموعة الإناث 5" },
+    { name: "ميساء الخلف", gender: "female", assignedMainGateId: "gate-l2", assignedSlotInMainGate: 1, finalGroupName: "مجموعة الإناث 5" },
+    { name: "مريم خياط", gender: "female", assignedMainGateId: "gate-l2", assignedSlotInMainGate: 1, finalGroupName: "مجموعة الإناث 5" },
+    { name: "مريم بودور", gender: "female", assignedMainGateId: "gate-l2", assignedSlotInMainGate: 1, finalGroupName: "مجموعة الإناث 5" },
+    { name: "نور نصر", gender: "female", assignedMainGateId: "gate-l2", assignedSlotInMainGate: 2, finalGroupName: "مجموعة الإناث 6" },
+    { name: "نورة بوجمعة", gender: "female", assignedMainGateId: "gate-l2", assignedSlotInMainGate: 2, finalGroupName: "مجموعة الإناث 6" },
+    { name: "رنا مصطفى محمود", gender: "female", assignedMainGateId: "gate-l2", assignedSlotInMainGate: 2, finalGroupName: "مجموعة الإناث 6" },
+    { name: "صفاء المخلف", gender: "female", assignedMainGateId: "gate-l2", assignedSlotInMainGate: 2, finalGroupName: "مجموعة الإناث 6" },
+    { name: "صفاء بلحساوية", gender: "female", assignedMainGateId: "gate-l2", assignedSlotInMainGate: 3, finalGroupName: "مجموعة الإناث 7" },
+    { name: "سعيدة بن محمود", gender: "female", assignedMainGateId: "gate-l2", assignedSlotInMainGate: 3, finalGroupName: "مجموعة الإناث 7" },
+    { name: "سمر القلالي", gender: "female", assignedMainGateId: "gate-l2", assignedSlotInMainGate: 3, finalGroupName: "مجموعة الإناث 7" },
+    { name: "سارة الحتو", gender: "female", assignedMainGateId: "gate-l2", assignedSlotInMainGate: 3, finalGroupName: "مجموعة الإناث 7" },
+    { name: "سارة غزال", gender: "female", assignedMainGateId: "gate-l2", assignedSlotInMainGate: 4, finalGroupName: "مجموعة الإناث 8" },
+    { name: "ساره ترفه", gender: "female", assignedMainGateId: "gate-l2", assignedSlotInMainGate: 4, finalGroupName: "مجموعة الإناث 8" },
+    { name: "شهناز بربر", gender: "female", assignedMainGateId: "gate-l2", assignedSlotInMainGate: 4, finalGroupName: "مجموعة الإناث 8" },
+    { name: "شهد السلايمة", gender: "female", assignedMainGateId: "gate-l2", assignedSlotInMainGate: 4, finalGroupName: "مجموعة الإناث 8" },
+    { name: "سمية محمود", gender: "female", assignedMainGateId: "gate-l2", assignedSlotInMainGate: 4, finalGroupName: "مجموعة الإناث 8" },
+    { name: "ياقوت", gender: "female", assignedMainGateId: "gate-r3", assignedSlotInMainGate: 1, finalGroupName: "مجموعة الإناث 9" },
+    { name: "فاطمة الغبشة", gender: "female", assignedMainGateId: "gate-r3", assignedSlotInMainGate: 1, finalGroupName: "مجموعة الإناث 9" },
+    { name: "هديل خاطر", gender: "female", assignedMainGateId: "gate-r3", assignedSlotInMainGate: 1, finalGroupName: "مجموعة الإناث 9" },
+    { name: "رملة جواني", gender: "female", assignedMainGateId: "gate-r3", assignedSlotInMainGate: 1, finalGroupName: "مجموعة الإناث 9" },
+    { name: "رؤى عوير", gender: "female", assignedMainGateId: "gate-r3", assignedSlotInMainGate: 2, finalGroupName: "مجموعة الإناث 10" },
+    { name: "امنة السيد جودة", gender: "female", assignedMainGateId: "gate-r3", assignedSlotInMainGate: 2, finalGroupName: "مجموعة الإناث 10" },
+    { name: "غفران بلحاج عمر", gender: "female", assignedMainGateId: "gate-r3", assignedSlotInMainGate: 2, finalGroupName: "مجموعة الإناث 10" },
+    { name: "إسراء عباس", gender: "female", assignedMainGateId: "gate-r3", assignedSlotInMainGate: 2, finalGroupName: "مجموعة الإناث 10" },
+    { name: "نور الاسمر", gender: "female", assignedMainGateId: "gate-r3", assignedSlotInMainGate: 3, finalGroupName: "مجموعة الإناث 11" },
+    { name: "اريج قفيشه", gender: "female", assignedMainGateId: "gate-r3", assignedSlotInMainGate: 3, finalGroupName: "مجموعة الإناث 11" },
+    { name: "فاطمة عوض", gender: "female", assignedMainGateId: "gate-r3", assignedSlotInMainGate: 3, finalGroupName: "مجموعة الإناث 11" },
+    { name: "مي القاروط", gender: "female", assignedMainGateId: "gate-r3", assignedSlotInMainGate: 3, finalGroupName: "مجموعة الإناث 11" },
+    { name: "سماء عبد الحي", gender: "female", assignedMainGateId: "gate-r3", assignedSlotInMainGate: 4, finalGroupName: "مجموعة الإناث 12" },
+    { name: "أمل عثمان", gender: "female", assignedMainGateId: "gate-r3", assignedSlotInMainGate: 4, finalGroupName: "مجموعة الإناث 12" },
+    { name: "أبوأحمده جنى", gender: "female", assignedMainGateId: "gate-r3", assignedSlotInMainGate: 4, finalGroupName: "مجموعة الإناث 12" },
+    { name: "جواهر الخولاني", gender: "female", assignedMainGateId: "gate-r3", assignedSlotInMainGate: 4, finalGroupName: "مجموعة الإناث 12" },
+    { name: "نهى محمد", gender: "female", assignedMainGateId: "gate-l3", assignedSlotInMainGate: 1, finalGroupName: "مجموعة الإناث 13" },
+    { name: "اماني طرطور", gender: "female", assignedMainGateId: "gate-l3", assignedSlotInMainGate: 1, finalGroupName: "مجموعة الإناث 13" },
+    { name: "علا أبو يوسف", gender: "female", assignedMainGateId: "gate-l3", assignedSlotInMainGate: 1, finalGroupName: "مجموعة الإناث 13" },
+    { name: "ولاء البعجاوي", gender: "female", assignedMainGateId: "gate-l3", assignedSlotInMainGate: 1, finalGroupName: "مجموعة الإناث 13" },
+    { name: "ريم محمد", gender: "female", assignedMainGateId: "gate-l3", assignedSlotInMainGate: 2, finalGroupName: "مجموعة الإناث 14" },
+    { name: "هند القصاص", gender: "female", assignedMainGateId: "gate-l3", assignedSlotInMainGate: 2, finalGroupName: "مجموعة الإناث 14" },
+    { name: "نسيبة فخاوي", gender: "female", assignedMainGateId: "gate-l3", assignedSlotInMainGate: 2, finalGroupName: "مجموعة الإناث 14" },
+    { name: "Razan Abualanaz", gender: "female", assignedMainGateId: "gate-l3", assignedSlotInMainGate: 2, finalGroupName: "مجموعة الإناث 14" },
+    { name: "زهراء صوالحه", gender: "female", assignedMainGateId: "gate-l3", assignedSlotInMainGate: 3, finalGroupName: "مجموعة الإناث 15" },
+    { name: "امنه الغزو", gender: "female", assignedMainGateId: "gate-l3", assignedSlotInMainGate: 3, finalGroupName: "مجموعة الإناث 15" },
+    { name: "مزن محمود", gender: "female", assignedMainGateId: "gate-l3", assignedSlotInMainGate: 3, finalGroupName: "مجموعة الإناث 15" },
+    { name: "سوار الدقه", gender: "female", assignedMainGateId: "gate-l3", assignedSlotInMainGate: 3, finalGroupName: "مجموعة الإناث 15" },
+    { name: "زهراء عبد اللطيف", gender: "female", assignedMainGateId: "gate-l3", assignedSlotInMainGate: 4, finalGroupName: "مجموعة الإناث 16" },
+    { name: "أنسام أبو شرخ", gender: "female", assignedMainGateId: "gate-l3", assignedSlotInMainGate: 4, finalGroupName: "مجموعة الإناث 16" },
+    { name: "ايناس عبد ربه", gender: "female", assignedMainGateId: "gate-l3", assignedSlotInMainGate: 4, finalGroupName: "مجموعة الإناث 16" },
+    { name: "مريم ربابعه", gender: "female", assignedMainGateId: "gate-l3", assignedSlotInMainGate: 4, finalGroupName: "مجموعة الإناث 16" },
+    { name: "شيماء بركه", gender: "female", assignedMainGateId: "gate-l3", assignedSlotInMainGate: 4, finalGroupName: "مجموعة الإناث 16" },
+    { name: "الدانه دعبوسي", gender: "female", assignedMainGateId: "gate-r4", assignedSlotInMainGate: 1, finalGroupName: "مجموعة الإناث 17" },
+    { name: "ديمه الهاشمي", gender: "female", assignedMainGateId: "gate-r4", assignedSlotInMainGate: 1, finalGroupName: "مجموعة الإناث 17" },
+    { name: "لانا العجل", gender: "female", assignedMainGateId: "gate-r4", assignedSlotInMainGate: 1, finalGroupName: "مجموعة الإناث 17" },
+    { name: "لوجين أبودرويش", gender: "female", assignedMainGateId: "gate-r4", assignedSlotInMainGate: 1, finalGroupName: "مجموعة الإناث 17" },
+    { name: "مي الغايش", gender: "female", assignedMainGateId: "gate-r4", assignedSlotInMainGate: 2, finalGroupName: "مجموعة الإناث 18" },
+    { name: "اريج احمد", gender: "female", assignedMainGateId: "gate-r4", assignedSlotInMainGate: 2, finalGroupName: "مجموعة الإناث 18" },
+    { name: "هبه الأسود", gender: "female", assignedMainGateId: "gate-r4", assignedSlotInMainGate: 2, finalGroupName: "مجموعة الإناث 18" },
+    { name: "لين فنون", gender: "female", assignedMainGateId: "gate-r4", assignedSlotInMainGate: 2, finalGroupName: "مجموعة الإناث 18" },
+    { name: "ميار الكردي", gender: "female", assignedMainGateId: "gate-r4", assignedSlotInMainGate: 3, finalGroupName: "مجموعة الإناث 19" },
+    { name: "زهرة شيخ", gender: "female", assignedMainGateId: "gate-r4", assignedSlotInMainGate: 3, finalGroupName: "مجموعة الإناث 19" },
+    { name: "هلا شحرور", gender: "female", assignedMainGateId: "gate-r4", assignedSlotInMainGate: 3, finalGroupName: "مجموعة الإناث 19" },
+    { name: "إحسان الجيراري", gender: "female", assignedMainGateId: "gate-r4", assignedSlotInMainGate: 3, finalGroupName: "مجموعة الإناث 19" },
+    { name: "مودة قجم", gender: "female", assignedMainGateId: "gate-r4", assignedSlotInMainGate: 4, finalGroupName: "مجموعة الإناث 20" },
+    { name: "فاطمة البدراوي", gender: "female", assignedMainGateId: "gate-r4", assignedSlotInMainGate: 4, finalGroupName: "مجموعة الإناث 20" },
+    { name: "دعاء سيد محمود عبدالعظيم مصطفى", gender: "female", assignedMainGateId: "gate-r4", assignedSlotInMainGate: 4, finalGroupName: "مجموعة الإناث 20" },
+    { name: "مآب سعدابي محمد سليمان", gender: "female", assignedMainGateId: "gate-r4", assignedSlotInMainGate: 4, finalGroupName: "مجموعة الإناث 20" },
+    { name: "نور الهدى جمعه", gender: "female", assignedMainGateId: "gate-l4", assignedSlotInMainGate: 1, finalGroupName: "مجموعة الإناث 21" },
+    { name: "رحيل عليوات", gender: "female", assignedMainGateId: "gate-l4", assignedSlotInMainGate: 1, finalGroupName: "مجموعة الإناث 21" },
+    { name: "أيه سلامه", gender: "female", assignedMainGateId: "gate-l4", assignedSlotInMainGate: 1, finalGroupName: "مجموعة الإناث 21" },
+    { name: "هدوه سيداحمد", gender: "female", assignedMainGateId: "gate-l4", assignedSlotInMainGate: 1, finalGroupName: "مجموعة الإناث 21" },
+    { name: "نور الهدى الشوا", gender: "female", assignedMainGateId: "gate-l4", assignedSlotInMainGate: 2, finalGroupName: "مجموعة الإناث 22" },
+    { name: "رغد قيطاز", gender: "female", assignedMainGateId: "gate-l4", assignedSlotInMainGate: 2, finalGroupName: "مجموعة الإناث 22" },
+    { name: "آلاء ابوقباله", gender: "female", assignedMainGateId: "gate-l4", assignedSlotInMainGate: 2, finalGroupName: "مجموعة الإناث 22" },
+    { name: "بسمة الفرارجي", gender: "female", assignedMainGateId: "gate-l4", assignedSlotInMainGate: 2, finalGroupName: "مجموعة الإناث 22" },
+    { name: "هند الدليل", gender: "female", assignedMainGateId: "gate-l4", assignedSlotInMainGate: 3, finalGroupName: "مجموعة الإناث 23" },
+    { name: "تغريد حسون", gender: "female", assignedMainGateId: "gate-l4", assignedSlotInMainGate: 3, finalGroupName: "مجموعة الإناث 23" },
+    { name: "عبير محمد", gender: "female", assignedMainGateId: "gate-l4", assignedSlotInMainGate: 3, finalGroupName: "مجموعة الإناث 23" },
+    { name: "كرم الأبطح", gender: "female", assignedMainGateId: "gate-l4", assignedSlotInMainGate: 3, finalGroupName: "مجموعة الإناث 23" },
+    { name: "نورالهدى طبازه", gender: "female", assignedMainGateId: "gate-l4", assignedSlotInMainGate: 4, finalGroupName: "مجموعة الإناث 24" },
+    { name: "رغد ابوالعناز", gender: "female", assignedMainGateId: "gate-l4", assignedSlotInMainGate: 4, finalGroupName: "مجموعة الإناث 24" },
+    { name: "هيا زعيم", gender: "female", assignedMainGateId: "gate-l4", assignedSlotInMainGate: 4, finalGroupName: "مجموعة الإناث 24" },
+    { name: "مريم المريخي", gender: "female", assignedMainGateId: "gate-l4", assignedSlotInMainGate: 4, finalGroupName: "مجموعة الإناث 24" },
+    { name: "عهود الحوري", gender: "female", assignedMainGateId: "gate-l4", assignedSlotInMainGate: 4, finalGroupName: "مجموعة الإناث 24" },
+    { name: "يسرا الشايب", gender: "female", assignedMainGateId: "gate-l4", assignedSlotInMainGate: 4, finalGroupName: "مجموعة الإناث 24" },
+];
+
+let currentIndex = 0;
+let isDistributing = false;
+let distributionInterval;
+let remainingPeople = [...peopleData];
+let distributionSpeed = 1500;
+const nameCard = document.getElementById('nameCard');
+const vortexEffect = document.getElementById('vortexEffect');
+const startBtn = document.getElementById('startBtn');
+const pauseBtn = document.getElementById('pauseBtn');
+const resetBtn = document.getElementById('resetBtn');
+const viewFinalDistributionBtn = document.getElementById('viewFinalDistributionBtn');
+const remainingCount = document.getElementById('remainingCount');
+const totalCount = document.getElementById('totalCount');
+const finalDistribution = document.getElementById('finalDistribution');
+const exportExcelBtn = document.getElementById('exportExcelBtn');
+const printBtn = document.getElementById('printBtn');
+const backToMainBtn = document.getElementById('backToMainBtn');
+const speedSlider = document.getElementById('speedSlider');
+const speedValue = document.getElementById('speedValue');
+const mainContainer = document.getElementById('mainContainer');
+const distributionTableContainer = document.getElementById('distributionTableContainer');
+const nameCardArea = document.getElementById('nameCardArea');
+
+const gateColors = {
+    "gate-r1": "#F8CD71", "gate-l1": "#F8CD71",
+    "gate-r2": "#86CDBB", "gate-l2": "#86CDBB",
+    "gate-r3": "#E5554D", "gate-l3": "#E5554D",
+    "gate-r4": "#247EB1", "gate-l4": "#247EB1"
+};
+
+function lightenColor(hex, percent) {
+    hex = hex.replace(/^\s*#|\s*$/g, '');
+    if (hex.length === 3) { hex = hex.replace(/(.)/g, '$1$1'); }
+    const int = parseInt(hex, 16);
+    let r = (int >> 16) & 0xFF;
+    let g = (int >> 8) & 0xFF;
+    let b = int & 0xFF;
+    r = Math.min(255, Math.floor(r * (1 + percent / 100)));
+    g = Math.min(255, Math.floor(g * (1 + percent / 100)));
+    b = Math.min(255, Math.floor(b * (1 + percent / 100)));
+    return '#' + ((1 << 24) + (r << 16) + (g << 8) + b).toString(16).slice(1).toUpperCase();
+}
+
+function initApp() {
+    totalCount.textContent = peopleData.length;
+    remainingCount.textContent = peopleData.length;
+    document.querySelectorAll('.slot').forEach(slot => {
+        slot.querySelector('.group-name').textContent = slot.getAttribute('data-group');
+    });
+    document.querySelectorAll('.slot').forEach(slot => {
+        slot.classList.add((slot.id.includes('r1') || slot.id.includes('l1')) ? 'male-slot' : 'female-slot');
+    });
+    document.querySelectorAll('.gate').forEach(gate => {
+        if (!gate.querySelector('.gate-icon')) {
+            const iconDiv = document.createElement('div');
+            iconDiv.className = 'gate-icon';
+            gate.insertBefore(iconDiv, gate.querySelector('h3'));
+        }
+    });
+    const appHeader = document.getElementById('appHeader');
+    const controlArea = document.getElementById('controlArea');
+    const topOffset = appHeader.offsetHeight + controlArea.offsetHeight + 15;
+    document.querySelectorAll('.left-panel, .right-panel').forEach(panel => { panel.style.top = `${topOffset}px`; });
+    if (window.innerWidth <= 768) { nameCardArea.style.top = `${topOffset + 20}px`; }
+    speedSlider.addEventListener('input', function() {
+        distributionSpeed = 3500 - parseInt(this.value);
+        speedValue.textContent = (distributionSpeed / 1000).toFixed(1) + ' ثانية';
+        if (isDistributing && distributionInterval) {
+            clearInterval(distributionInterval);
+            distributionInterval = setInterval(() => {
+                if (remainingPeople.length === 0) {
+                    stopDistribution(true);
+                    showCompletionIndication(); return;
+                }
+                distributeNextPerson();
+            }, distributionSpeed);
+        }
+    });
+    vortexEffect.classList.add('hidden');
+    viewFinalDistributionBtn.classList.add('hidden');
+}
+
+function showNameCard(person) {
+    const nameElement = nameCard.querySelector('.name');
+    const genderIcon = nameCard.querySelector('.gender-icon');
+    nameElement.textContent = person.name;
+    if (person.gender === 'male') {
+        genderIcon.innerHTML = '<i class="fas fa-mars" style="color: #3498db;"></i>';
+        nameCard.classList.add('male-card'); nameCard.classList.remove('female-card');
+    } else {
+        genderIcon.innerHTML = '<i class="fas fa-venus" style="color: #e84393;"></i>';
+        nameCard.classList.add('female-card'); nameCard.classList.remove('male-card');
+    }
+    nameCard.style.transform = ''; nameCard.style.opacity = '';
+    nameCard.classList.remove('hidden', 'name-card-move');
+    nameCard.classList.add('name-card-enter', 'name-card-animate');
+    setTimeout(() => { nameCard.classList.remove('name-card-enter'); }, 800);
+}
+
+function moveNameCardToGate(person) {
+    const targetGate = document.getElementById(person.assignedMainGateId);
+    if (!targetGate) { resetNameCardPosition(); return; }
+    const targetGateRect = targetGate.getBoundingClientRect();
+    const nameCardRect = nameCard.getBoundingClientRect();
+    const nameCardAreaRect = nameCardArea.getBoundingClientRect();
+    const gateCenterXInArea = (targetGateRect.left + targetGateRect.width / 2) - nameCardAreaRect.left;
+    const gateCenterYInArea = (targetGateRect.top + targetGateRect.height / 2) - nameCardAreaRect.top;
+    const cardDestX = gateCenterXInArea - nameCardRect.width / 2;
+    const cardDestY = gateCenterYInArea - nameCardRect.height / 2;
+    nameCard.classList.remove('name-card-animate');
+    nameCard.classList.add('name-card-move');
+    nameCard.style.transition = 'transform 1s cubic-bezier(0.6, -0.28, 0.735, 0.045), opacity 0.8s ease-out';
+    nameCard.style.transform = `translate(${cardDestX}px, ${cardDestY}px) scale(0.6) rotate(15deg)`;
+    nameCard.style.opacity = '0.7';
+    targetGate.classList.add('gate-highlight');
+    setTimeout(() => { targetGate.classList.remove('gate-highlight'); }, 1000);
+    setTimeout(() => { addNameToSlot(person); resetNameCardPosition(); }, 1000);
+}
+
+function resetNameCardPosition() {
+    nameCard.classList.add('hidden');
+    nameCard.classList.remove('name-card-move', 'name-card-animate', 'name-card-enter');
+    setTimeout(() => {
+        nameCard.style.transition = 'none'; nameCard.style.transform = '';
+        nameCard.style.opacity = ''; nameCard.offsetHeight; nameCard.style.transition = '';
+    }, 0);
+}
+
+function addNameToSlot(person) {
+    const slotId = `${person.assignedMainGateId}-slot${person.assignedSlotInMainGate}`;
+    const slot = document.getElementById(slotId);
+    if (!slot) { return; }
+    const namesList = slot.querySelector('.names-list');
+    const nameElement = document.createElement('div');
+    nameElement.textContent = person.name;
+    const genderIconSpan = document.createElement('span');
+    genderIconSpan.style.marginRight = '5px';
+    genderIconSpan.innerHTML = person.gender === 'male' ?
+        '<i class="fas fa-mars" style="color: #3498db;"></i>' :
+        '<i class="fas fa-venus" style="color: #e84393;"></i>';
+    nameElement.prepend(genderIconSpan);
+    namesList.appendChild(nameElement);
+    nameElement.classList.add('new-name-added');
+    setTimeout(() => { nameElement.classList.remove('new-name-added'); nameElement.style.backgroundColor = ''; }, 2000);
+    remainingCount.textContent = remainingPeople.length;
+}
+
+function startAutoDistribution() {
+    if (isDistributing) return;
+    if (remainingPeople.length === 0) { showCompletionIndication(); return; }
+    isDistributing = true;
+    startBtn.classList.add('hidden');
+    pauseBtn.classList.remove('hidden');
+    viewFinalDistributionBtn.classList.add('hidden');
+    vortexEffect.classList.remove('hidden');
+    distributeNextPerson();
+    distributionInterval = setInterval(() => {
+        if (remainingPeople.length === 0) {
+            stopDistribution(true); showCompletionIndication(); return;
+        }
+        distributeNextPerson();
+    }, distributionSpeed);
+}
+
+function distributeNextPerson() {
+    if (remainingPeople.length === 0) return;
+    const randomIndex = Math.floor(Math.random() * remainingPeople.length);
+    const nextPerson = remainingPeople[randomIndex];
+    remainingPeople.splice(randomIndex, 1);
+    showNameCard(nextPerson);
+    setTimeout(() => { moveNameCardToGate(nextPerson); }, 1200);
+}
+
+function stopDistribution(isCompletion = false) {
+    isDistributing = false;
+    clearInterval(distributionInterval);
+    distributionInterval = null;
+    pauseBtn.classList.add('hidden');
+    if (remainingPeople.length > 0) { startBtn.classList.remove('hidden'); }
+    if (isCompletion || remainingPeople.length === 0) { vortexEffect.classList.add('hidden'); }
+}
+
+function showCompletionIndication() {
+    vortexEffect.classList.add('hidden');
+    pauseBtn.classList.add('hidden');
+    startBtn.classList.add('hidden');
+    viewFinalDistributionBtn.classList.remove('hidden');
+}
+
+function showFinalDistribution() {
+    mainContainer.classList.add('hidden');
+    finalDistribution.classList.remove('hidden');
+    vortexEffect.classList.add('hidden');
+
+    const gateNames = {};
+    document.querySelectorAll('.gate').forEach(gateElement => {
+        const h3 = gateElement.querySelector('h3');
+        if (h3) { gateNames[gateElement.id] = h3.textContent.trim(); }
+    });
+
+    const sortedPeople = [...peopleData].sort((a, b) => {
+        const colorA = gateColors[a.assignedMainGateId] || "";
+        const colorB = gateColors[b.assignedMainGateId] || "";
+        if (colorA < colorB) return -1;
+        if (colorA > colorB) return 1;
+        return a.finalGroupName.localeCompare(b.finalGroupName);
+    });
+
+    let tableHTML = `
+        <table class="distribution-table">
+            <thead>
+                <tr>
+                    <th>#</th>
+                    <th>اسم المنتسب</th>
+                    <th>الجنس</th>
+                    <th>المجموعة</th>
+                    <th>اسم البوابة</th>
+                    <th>المعسكر</th>
+                </tr>
+            </thead>
+            <tbody>
+    `;
+    sortedPeople.forEach((person, index) => {
+        const camp = person.assignedMainGateId.includes('r') ? 'معسكر الابداع' : 'معسكر التميز';
+        const gateColor = gateColors[person.assignedMainGateId] || '#FFFFFF';
+        const rowColor = lightenColor(gateColor, 45); // Lighten by 0% for softer background
+        const gateName = gateNames[person.assignedMainGateId] || 'غير محدد';
+
+        tableHTML += `
+            <tr style="background-color: ${rowColor};">
+                <td>${index + 1}</td>
+                <td>${person.name}</td>
+                <td>${person.gender === 'male' ? 'ذكر' : 'أنثى'}</td>
+                <td>${person.finalGroupName}</td>
+                <td>${gateName}</td>
+                <td>${camp}</td>
+            </tr>
+        `;
+    });
+    tableHTML += `</tbody></table>`;
+    distributionTableContainer.innerHTML = tableHTML;
+}
+
+function exportToExcel() {
+    const gateNames = {};
+    document.querySelectorAll('.gate').forEach(gateElement => {
+        const h3 = gateElement.querySelector('h3');
+        if (h3) { gateNames[gateElement.id] = h3.textContent.trim(); }
+    });
+
+    const data = [['#', 'اسم المنتسب', 'الجنس', 'المجموعة', 'اسم البوابة', 'المعسكر']];
+    const sortedPeople = [...peopleData].sort((a, b) => { // Apply same sorting for consistency
+        const colorA = gateColors[a.assignedMainGateId] || "";
+        const colorB = gateColors[b.assignedMainGateId] || "";
+        if (colorA < colorB) return -1;
+        if (colorA > colorB) return 1;
+        return a.finalGroupName.localeCompare(b.finalGroupName);
+    });
+
+    sortedPeople.forEach((person, index) => {
+        const camp = person.assignedMainGateId.includes('r') ? 'معسكر الابداع' : 'معسكر التميز';
+        const gateName = gateNames[person.assignedMainGateId] || 'غير محدد';
+        data.push([index + 1, person.name, person.gender === 'male' ? 'ذكر' : 'أنثى', person.finalGroupName, gateName, camp]);
+    });
+    const wb = XLSX.utils.book_new();
+    const ws = XLSX.utils.aoa_to_sheet(data);
+    XLSX.utils.book_append_sheet(wb, ws, "التوزيع النهائي");
+    XLSX.writeFile(wb, "التوزيع_النهائي.xlsx");
+}
+
+function printReport() { window.print(); }
+
+function backToMain() {
+    finalDistribution.classList.add('hidden');
+    mainContainer.classList.remove('hidden');
+    if (remainingPeople.length === 0 && !isDistributing) {
+        startBtn.classList.add('hidden');
+        pauseBtn.classList.add('hidden');
+        viewFinalDistributionBtn.classList.remove('hidden');
+    } else if (isDistributing) {
+        startBtn.classList.add('hidden');
+        pauseBtn.classList.remove('hidden');
+        viewFinalDistributionBtn.classList.add('hidden');
+        vortexEffect.classList.remove('hidden'); // Show vortex if returning while distributing
+    } else {
+        startBtn.classList.remove('hidden');
+        pauseBtn.classList.add('hidden');
+        viewFinalDistributionBtn.classList.add('hidden');
+    }
+}
+
+function resetApp() {
+    stopDistribution();
+    remainingPeople = [...peopleData];
+    currentIndex = 0;
+    nameCard.classList.add('hidden');
+    resetNameCardPosition();
+    vortexEffect.classList.add('hidden');
+    document.querySelectorAll('.names-list').forEach(list => { list.innerHTML = ''; });
+    remainingCount.textContent = remainingPeople.length;
+    totalCount.textContent = peopleData.length;
+    finalDistribution.classList.add('hidden');
+    mainContainer.classList.remove('hidden');
+    startBtn.classList.remove('hidden');
+    pauseBtn.classList.add('hidden');
+    viewFinalDistributionBtn.classList.add('hidden');
+}
+
+startBtn.addEventListener('click', startAutoDistribution);
+pauseBtn.addEventListener('click', () => stopDistribution(false));
+resetBtn.addEventListener('click', resetApp);
+viewFinalDistributionBtn.addEventListener('click', showFinalDistribution);
+exportExcelBtn.addEventListener('click', exportToExcel);
+printBtn.addEventListener('click', printReport);
+backToMainBtn.addEventListener('click', backToMain);
+
+window.addEventListener('DOMContentLoaded', initApp);
+window.addEventListener('resize', initApp);
+
+</script>
+</body>
+</html>
