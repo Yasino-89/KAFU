@@ -1,0 +1,548 @@
+<!DOCTYPE html>
+<html dir="rtl" lang="ar">
+<head>
+  <base target="_top">
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>تسجيل نقاط بطولة الكفو</title>
+  <link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@400;500;700&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --primary-color: #247EB1;
+      --secondary-color: #934798;
+      --accent-color: #E5554D;
+      --light-color: #f8f9fa;
+      --dark-color: #212529;
+      --success-color: #86CDBB;
+      --error-color: #E5554D;
+      --highlight-color: #F8CD71;
+      --highlight-light: #F69C7A;
+    }
+    
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+    
+    body {
+      font-family: 'Tajawal', sans-serif;
+      direction: rtl;
+      background: linear-gradient(135deg, #f5f7fa 0%, #e2e8f0 100%);
+      min-height: 100vh;
+      padding: 20px;
+      color: var(--dark-color);
+    }
+    
+    .container {
+      max-width: 600px;
+      margin: 0 auto;
+      background-color: white;
+      border-radius: 15px;
+      box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+      padding: 30px;
+      transition: all 0.3s ease;
+      position: relative;
+      overflow: hidden;
+    }
+    
+    .container::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      right: 0;
+      width: 100%;
+      height: 8px;
+      background: linear-gradient(90deg, #E5554D, #F69C7A, #F8CD71, #86CDBB, #247EB1, #934798);
+    }
+    
+    .logo-container {
+      text-align: center;
+      margin-bottom: 20px;
+    }
+    
+    .logo {
+      max-width: 220px;
+      height: auto;
+      margin-bottom: 10px;
+    }
+    
+    h2 {
+      color: var(--primary-color);
+      text-align: center;
+      margin-bottom: 25px;
+      font-weight: 700;
+      font-size: 28px;
+      position: relative;
+      padding-bottom: 10px;
+    }
+    
+    h2::after {
+      content: '';
+      position: absolute;
+      bottom: 0;
+      right: 0; /* Adjusted for RTL */
+      left: auto; /* Ensure left is auto for RTL */
+      width: 70px;
+      height: 3px;
+      background: var(--accent-color);
+      border-radius: 3px;
+    }
+    
+    .form-group {
+      margin-bottom: 20px;
+      position: relative;
+    }
+    
+    label {
+      font-weight: 500;
+      margin-bottom: 8px;
+      display: block;
+      color: var(--dark-color);
+      transition: all 0.3s ease;
+    }
+    
+    select, input[type="text"], input[type="number"] { /* Specificity for text/number inputs */
+      width: 100%;
+      padding: 12px 15px;
+      font-size: 16px;
+      border-radius: 8px;
+      border: 2px solid #e9ecef;
+      background-color: #f8f9fa;
+      transition: all 0.3s ease;
+      font-family: 'Tajawal', sans-serif;
+    }
+    
+    select:focus, input[type="text"]:focus, input[type="number"]:focus {
+      outline: none;
+      border-color: var(--primary-color);
+      box-shadow: 0 0 0 3px rgba(36, 126, 177, 0.2);
+      background-color: white;
+    }
+    
+    select {
+      appearance: none;
+      background-image: url("data:image/svg+xml;charset=UTF-8,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='currentColor' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3e%3cpolyline points='6 9 12 15 18 9'%3e%3c/polyline%3e%3c/svg%3e");
+      background-repeat: no-repeat;
+      background-position: left 15px center; /* Adjusted for RTL */
+      background-size: 15px;
+      padding-left: 40px; /* Add padding to avoid text overlap with arrow */
+    }
+
+    .checkbox-group {
+        border: 2px solid #e9ecef;
+        border-radius: 8px;
+        padding: 15px;
+        background-color: #f8f9fa;
+    }
+
+    .checkbox-group label {
+        display: flex; /* Use flex for alignment */
+        align-items: center;
+        margin-bottom: 10px;
+        font-weight: normal;
+        cursor: pointer;
+    }
+
+    .checkbox-group input[type="checkbox"] {
+        margin-left: 10px; /* Space between checkbox and label text */
+        margin-right: 0; /* Reset margin-right for RTL */
+        width: auto; /* Override default 100% width */
+        height: auto;
+        accent-color: var(--primary-color);
+    }
+    
+    button {
+      width: 100%;
+      padding: 14px;
+      font-size: 18px;
+      border-radius: 8px;
+      border: none;
+      background-color: var(--primary-color);
+      color: white;
+      font-weight: 500;
+      cursor: pointer;
+      transition: all 0.3s ease;
+      margin-top: 10px;
+      font-family: 'Tajawal', sans-serif;
+      box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+    }
+    
+    button:hover {
+      background-color: var(--secondary-color);
+      transform: translateY(-2px);
+      box-shadow: 0 6px 8px rgba(0, 0, 0, 0.15);
+    }
+    
+    button:active {
+      transform: translateY(0);
+      box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+    }
+    
+    .loading {
+      display: none;
+      text-align: center;
+      margin-top: 20px;
+    }
+    
+    .spinner {
+      width: 40px;
+      height: 40px;
+      margin: 0 auto;
+      border: 4px solid rgba(0, 0, 0, 0.1);
+      border-left-color: var(--primary-color);
+      border-radius: 50%;
+      animation: spin 1s linear infinite;
+    }
+    
+    @keyframes spin {
+      to { transform: rotate(360deg); }
+    }
+
+    @keyframes shake {
+      0%, 100% { transform: translateX(0); }
+      25% { transform: translateX(-5px); }
+      50% { transform: translateX(5px); }
+      75% { transform: translateX(-3px); }
+    }
+    
+    .toast {
+      position: fixed;
+      top: 20px;
+      right: 20px; /* Correct for RTL, if you want it on the other side, use left: 20px */
+      padding: 15px 25px;
+      background-color: var(--success-color);
+      color: white;
+      border-radius: 8px;
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+      transform: translateY(-100px);
+      opacity: 0;
+      transition: all 0.4s ease;
+      z-index: 1000;
+      font-weight: 500;
+    }
+    
+    .toast.show {
+      transform: translateY(0);
+      opacity: 1;
+    }
+
+    #totalPointsDisplay {
+        margin-top: 15px;
+        font-weight: bold;
+        color: var(--primary-color);
+        text-align: center;
+        font-size: 18px;
+    }
+    
+    @media (max-width: 768px) {
+      .container { padding: 20px; }
+      h2 { font-size: 24px; }
+      select, input[type="text"], input[type="number"], button { padding: 12px; font-size: 15px; }
+      .logo { max-width: 100px; }
+    }
+    
+    @media (max-width: 480px) {
+      body { padding: 10px; }
+      .container { padding: 15px; }
+      h2 { font-size: 22px; margin-bottom: 20px; }
+      .logo { max-width: 80px; } 
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <div class="logo-container">
+      <img src="https://yasino-89.github.io/Daleel/KAFU.PNG" alt="KAFU" class="logo">
+    </div>
+    
+    <h2>تسجيل نقاط بطولة الكفو</h2>
+
+    <div class="form-group">
+      <label for="competency">اختر المجموعة (الكفاءة):</label>
+      <select id="competency" required>
+        <option value="" disabled selected>اختر المجموعة</option>
+        </select>
+    </div>
+
+    <div class="form-group">
+      <label for="name">اسم المنتسب:</label>
+      <select id="name" required>
+        <option value="" disabled selected>اختر اسم المنتسب</option>
+        </select>
+    </div>
+
+    <div class="form-group">
+        <label>اختر الأنشطة لإضافة النقاط:</label>
+        <div id="activitiesCheckboxes" class="checkbox-group">
+            </div>
+        <p id="totalPointsDisplay">إجمالي النقاط المكتسبة: 0</p>
+        <input type="hidden" id="totalPointsValue" value="0">
+    </div>
+
+    <div class="form-group">
+      <label for="addedBy">اسم الشخص الذي أضاف النقاط:</label>
+      <input type="text" id="addedBy" placeholder="مثال: فاطمة جمال" required>
+    </div>
+
+    <button onclick="submitData()">إضافة النقاط</button>
+    
+    <div class="loading" id="loading">
+      <div class="spinner"></div>
+      <p>جاري معالجة البيانات...</p>
+    </div>
+  </div>
+  
+  <div class="toast" id="toast"></div>
+
+  <script>
+    // --- الأنشطة الموحدة لجميع الكفاءات ---
+    const sharedActivities = [
+      { name: "حضور البرنامج كاملًا", points: 20 },
+      { name: "المشاركة الفعالة والتفاعل", points: 15 },
+      { name: "إكمال المهام والتحديات اليومية", points: 25 },
+      { name: "مبادرة ذات أثر إيجابي", points: 10 },
+      { name: "مساعدة و دعم الزملاء", points: 5 }
+    ];
+
+    // --- بيانات الكفاءات والمنتسبين ---
+    const competenciesData = {
+      "الوعي الذاتي": {
+        affiliates: [
+          "1 - عبد العزيز المجاهد", "2 - عبدالله شرف الدين", "3 - عبدالرحمن ابو جلبان", "4 - عبد الرحمن سلامة", "5 - عبدالجبار الصالح",
+          "6 - عبدالعظيم عبدالمالك", "7 - عبدالرحمن إسماعيل", "8 - أحمد مصلح", "9 - أحمد معوض", "10 - أنس العبدالرحمن",
+          "11 - أواب إبراهيم", "12 - أيمن ابراهيم", "13 - فيصل مجذوب", "14 - حموده ابو عنزه", "15 - حمزه ابو ارشيد",
+          "16 - حذيفه فاضل", "17 - جميل المخلف", "18 - محمود عبد الرازق", "19 - محمود الفرماوي", "20 - ماجد القيسي",
+          "21 - محمد أيهم حريتاني", "22 - محمد الفرج", "23 - محمد الشيخ", "24 - محمد محمد", "25 - محمد كدخدائي",
+          "26 - محمد ابراهيم الياس", "27 - محمد ضاهر", "28 - نور الاسلام طالبي", "29 - عمر حيدر", "30 - قيس الجمل",
+          "31 - صهيب الأغبري", "32 - طلحة محمد", "33 - وسيم الدم", "34 - يحيى السعيدي", "35 - يوسف علي"
+        ],
+        activities: sharedActivities
+      },
+      "الالتزام": {
+        affiliates: [
+          "36 - الدانه دعبوسي", "37 - ديمه الهاشمي", "38 - لانا العجل", "39 - لوجين أبودرويش", "40 - مي الغايش",
+          "41 - اريج احمد", "42 - هبه الأسود", "43 - لين فنون", "44 - ميار الكردي", "45 - زهرة شيخ",
+          "46 - هلا شحرور", "47 - إحسان الجيراري", "48 - مودة قجم", "49 - فاطمة البدراوي", "50 - دعاء سيد محمود عبدالعظيم مصطفى",
+          "51 - مآب سعدابي محمد سليمان", "52 - نور الهدى جمعه", "53 - رحيل عليوات", "54 - أيه سلامه", "55 - هدوه سيداحمد",
+          "56 - نور الهدى الشوا", "57 - رغد قيطاز", "58 - آلاء ابوقباله", "59 - بسمة الفرارجي", "60 - هند الدليل",
+          "61 - تغريد حسون", "62 - عبير محمد", "63 - كرم الأبطح", "64 - نورالهدى طبازه", "65 - رغد ابوالعناز",
+          "66 - هيا زعيم", "67 - مريم المريخي", "68 - عهود الحوري", "69 - يسرا الشايب"
+        ],
+        activities: sharedActivities
+      },
+      "الشجاعة": {
+        affiliates: [
+          "70 - أسماء ياقوت", "71 - فاطمة الغبشة", "72 - هديل خاطر", "73 - رملة جواني", "74 - رؤى عوير",
+          "75 - امنة السيد جودة", "76 - غفران بلحاج عمر", "77 - إسراء عباس", "78 - نور الاسمر", "79 - اريج قفيشه",
+          "80 - فاطمة عوض", "81 - مي القاروط", "82 - سماء عبد الحي", "83 - أمل عثمان", "84 - أبوأحمده جنى",
+          "85 - جواهر الخولاني", "86 - نهى محمد", "87 - اماني طرطور", "88 - علا أبو يوسف", "89 - ولاء البعجاوي",
+          "90 - ريم محمد", "91 - هند القصاص", "92 - نسيبة فخاوي", "93 - Razan Abualanaz", "94 - زهراء صوالحه",
+          "95 - امنه الغزو", "96 - مزن محمود", "97 - سوار الدقه", "98 - زهراء عبد اللطيف", "99 - أنسام أبو شرخ",
+          "100 - ايناس عبد ربه", "101 - مريم ربابعه", "102 - شيماء بركه"
+        ],
+        activities: sharedActivities
+      },
+      "التعاون": {
+        affiliates: [
+          "103 - ذكريات الشلول", "104 - نور القدور", "105 - لميس تميمي", "106 - مها الربعان", "107 - سلام عبد الجواد",
+          "108 - عبير محي الدين", "109 - الاء بني بكر", "110 - اسماء عساف", "111 - دلال الطيري", "112 - دعاء يوسف",
+          "113 - دعاء الحديد", "114 - الشيماء ضبيع", "115 - إسراء الشنيطي", "116 - فاطمة الزهراء محمد جلال الدين طعيمه سيد", "117 - حبيبه رفاعي",
+          "118 - هيفاء عودة الله", "119 - مي جابر", "120 - ميساء الخلف", "121 - مريم خياط", "122 - مريم بودور",
+          "123 - نور نصر", "124 - نورة بوجمعة", "125 - رنا مصطفى محمود عبدالقادر حسن", "126 - صفاء المخلف", "127 - صفاء بلحساوية",
+          "128 - سعيدة بن محمود", "129 - سمر القلالي", "130 - سارة الحتو", "131 - سارة غزال", "132 - ساره ترفه",
+          "133 - شهناز بربر", "134 - شهد السلايمة", "135 - سمية محمود"
+        ],
+        activities: sharedActivities
+      }
+    };
+    // --- نهاية بيانات الكفاءات والمنتسبين ---
+
+    const competencySelect = document.getElementById('competency');
+    const nameSelect = document.getElementById('name');
+    const activitiesCheckboxesDiv = document.getElementById('activitiesCheckboxes');
+    const totalPointsDisplay = document.getElementById('totalPointsDisplay');
+    const totalPointsValueInput = document.getElementById('totalPointsValue');
+    const addedByInput = document.getElementById('addedBy');
+
+    function populateCompetencies() {
+        while (competencySelect.options.length > 1) {
+            competencySelect.remove(1);
+        }
+        Object.keys(competenciesData).forEach(competencyName => {
+            const option = document.createElement('option');
+            option.value = competencyName;
+            option.textContent = competencyName;
+            competencySelect.appendChild(option);
+        });
+    }
+
+    function populateAffiliates(selectedCompetency) {
+        nameSelect.innerHTML = '<option value="" disabled selected>اختر اسم المنتسب</option>'; 
+        if (selectedCompetency && competenciesData[selectedCompetency]) {
+            competenciesData[selectedCompetency].affiliates.forEach(affiliateName => {
+                const option = document.createElement('option');
+                option.value = affiliateName; 
+                option.textContent = affiliateName;
+                nameSelect.appendChild(option);
+            });
+        }
+    }
+
+    function populateActivities(selectedCompetency) {
+        activitiesCheckboxesDiv.innerHTML = ''; 
+        if (selectedCompetency && competenciesData[selectedCompetency] && competenciesData[selectedCompetency].activities) {
+            competenciesData[selectedCompetency].activities.forEach(activity => {
+                const checkboxId = `activity-${activity.name.replace(/\s+/g, '-')}-${selectedCompetency.replace(/\s+/g, '-')}`;
+                
+                const label = document.createElement('label');
+                label.htmlFor = checkboxId;
+                
+                const checkbox = document.createElement('input');
+                checkbox.type = 'checkbox';
+                checkbox.id = checkboxId;
+                checkbox.name = 'activities';
+                checkbox.value = activity.name;
+                checkbox.dataset.points = activity.points;
+                checkbox.addEventListener('change', updateTotalPoints);
+                
+                label.appendChild(checkbox);
+                label.appendChild(document.createTextNode(` ${activity.name} (${activity.points} نقطة)`));
+                
+                activitiesCheckboxesDiv.appendChild(label);
+                activitiesCheckboxesDiv.appendChild(document.createElement('br'));
+            });
+        }
+        updateTotalPoints(); 
+    }
+
+    function updateTotalPoints() {
+        let totalPoints = 0;
+        const checkedActivities = activitiesCheckboxesDiv.querySelectorAll('input[name="activities"]:checked');
+        checkedActivities.forEach(checkbox => {
+            totalPoints += parseInt(checkbox.dataset.points);
+        });
+        totalPointsDisplay.textContent = `إجمالي النقاط المكتسبة: ${totalPoints}`;
+        totalPointsValueInput.value = totalPoints;
+    }
+
+    competencySelect.addEventListener('change', function() {
+        const selectedCompetency = this.value;
+        populateAffiliates(selectedCompetency);
+        populateActivities(selectedCompetency);
+        nameSelect.value = ""; 
+        if (nameSelect.style) nameSelect.style.borderColor = '#e9ecef';
+    });
+
+    function showToast(message, isSuccess = true) {
+      const toast = document.getElementById('toast');
+      toast.textContent = message;
+      toast.style.backgroundColor = isSuccess ? 'var(--success-color)' : 'var(--error-color)';
+      toast.classList.add('show');
+      
+      setTimeout(() => {
+        toast.classList.remove('show');
+      }, 3000);
+    }
+    
+    function validateForm() {
+      let isValid = true;
+      const fieldsToValidate = [
+        { el: competencySelect, name: 'المجموعة (الكفاءة)' },
+        { el: nameSelect, name: 'اسم المنتسب' },
+        { el: addedByInput, name: 'اسم مُضيف النقاط' }
+      ];
+
+      fieldsToValidate.forEach(field => {
+        if (!field.el.value) {
+          field.el.style.borderColor = 'var(--error-color)';
+          field.el.style.animation = 'shake 0.5s';
+          setTimeout(() => { field.el.style.animation = ''; }, 500);
+          isValid = false;
+        } else {
+          field.el.style.borderColor = '#e9ecef';
+        }
+      });
+
+      const selectedActivitiesCount = activitiesCheckboxesDiv.querySelectorAll('input[name="activities"]:checked').length;
+      if (selectedActivitiesCount === 0 && isValid) { 
+          activitiesCheckboxesDiv.style.borderColor = 'var(--error-color)';
+          isValid = false;
+          showToast('يرجى اختيار نشاط واحد على الأقل', false);
+      } else if (selectedActivitiesCount > 0) {
+          activitiesCheckboxesDiv.style.borderColor = '#e9ecef';
+      } else if (selectedActivitiesCount === 0 && !isValid) {
+        activitiesCheckboxesDiv.style.borderColor = 'var(--error-color)';
+      }
+      
+      return isValid;
+    }
+    
+    function submitData() {
+      if (!validateForm()) {
+        if (!competencySelect.value || !nameSelect.value || !addedByInput.value) {
+            showToast('يرجى تعبئة جميع الحقول المطلوبة', false);
+        }
+        return;
+      }
+      
+      const loading = document.getElementById('loading');
+      loading.style.display = 'block';
+      
+      const selectedActivityDetails = [];
+      activitiesCheckboxesDiv.querySelectorAll('input[name="activities"]:checked').forEach(checkbox => {
+          selectedActivityDetails.push({
+              name: checkbox.value,
+              points: parseInt(checkbox.dataset.points)
+          });
+      });
+
+      const data = {
+        competency: competencySelect.value,
+        name: nameSelect.value, 
+        selectedActivities: selectedActivityDetails,
+        totalPoints: parseInt(totalPointsValueInput.value),
+        addedBy: addedByInput.value
+      };
+      
+      console.log("Data to be sent:", data); 
+
+      setTimeout(() => {
+        google.script.run
+          .withSuccessHandler(() => {
+            showToast('✅ تم تسجيل النقاط بنجاح!');
+            competencySelect.value = '';
+            nameSelect.innerHTML = '<option value="" disabled selected>اختر اسم المنتسب</option>';
+            activitiesCheckboxesDiv.innerHTML = '';
+            updateTotalPoints(); 
+            addedByInput.value = '';
+            [competencySelect, nameSelect, addedByInput, activitiesCheckboxesDiv].forEach(el => {
+                if(el.style) el.style.borderColor = '#e9ecef';
+            });
+          })
+          .withFailureHandler(error => {
+            showToast(`❌ حدث خطأ: ${error.message}`, false);
+          })
+          .addPoints(data); 
+          
+        loading.style.display = 'none';
+      }, 1000);
+    }
+    
+    document.querySelectorAll('input[type="text"], select').forEach(input => { 
+      input.addEventListener('focus', function() {
+        const label = this.parentElement.querySelector('label[for="' + this.id + '"]');
+        if (label) label.style.color = 'var(--primary-color)';
+      });
+      
+      input.addEventListener('blur', function() {
+        const label = this.parentElement.querySelector('label[for="' + this.id + '"]');
+        if (label) label.style.color = 'var(--dark-color)';
+      });
+    });
+
+    populateCompetencies();
+
+  </script>
+</body>
+</html>
